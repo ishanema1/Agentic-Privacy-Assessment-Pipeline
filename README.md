@@ -195,7 +195,24 @@ This is the test that would catch the most expensive class of bug in this pipeli
 
 ```bash
 python -m pytest test_pipeline_integration.py -v   # 3 tests, fully offline
-python -m pytest -v                                 # run everything — 39 tests across the repo
+python -m pytest -v                                 # run everything — 49 tests across the repo
+```
+
+## Code sample: a real agent (not just an LLM-orchestrated workflow)
+
+Worth being precise about a distinction that matters: [`pipeline.py`](./pipeline.py) above is an **LLM-orchestrated workflow** — the code decides which module to call and in what order; the LLM only generates text within a step. [`agent.py`](./agent.py) is a genuine **agent** — the LLM is given a set of tools and decides for itself which to call, when, and when it has enough information to submit a final answer. The control flow lives in the model's output, not in an `if/else` statement.
+
+Implemented directly against Anthropic's tool-use API rather than through LangGraph/LangChain — a from-scratch loop is a stronger demonstration of what those frameworks are actually doing underneath (a graph engine's tool-calling node is this same loop with more scaffolding around it).
+
+**Tool design, worth reading closely:**
+
+- `search_confluence_docs`, `search_prior_assessments`, and `run_attacker_model` are read-only information-gathering tools. `run_attacker_model`'s description explicitly flags it as expensive and tells the agent to check for a reusable prior assessment first — but nothing *forces* that order. `test_agent.py` proves the agent actually respects it, by call-counting whether the (mocked) attacker model runs.
+- `submit_privacy_assessment` doubles as the "final answer" tool — calling it ends the loop. Its schema **does not include a `risk_level` field**, only `risk_score`. This is a stronger version of the guarantee `draft_generator.py` enforces at the code level: instead of stripping an unwanted field after the fact, the tool schema never gives the model the option to supply one in the first place. `risk_level` is always computed by `classify_risk_level`.
+- The agent loop has a hard `max_iterations` cap and raises `AgentError` rather than looping forever if the model never calls a tool or never submits — a real failure mode for any tool-calling loop, tested explicitly.
+
+```bash
+python agent.py                    # runs with the scripted mock client, no API key needed
+python -m pytest test_agent.py -v  # 10 tests, incl. both branch outcomes and both failure modes
 ```
 
 

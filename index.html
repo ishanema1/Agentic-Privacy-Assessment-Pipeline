@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Privacy Assessment Pipeline — Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #0B1220;
+    --surface: #121B2E;
+    --surface-2: #17223A;
+    --text: #E7ECF3;
+    --muted: #8B96AC;
+    --trust: #43D9C0;
+    --risk: #F0A868;
+    --border: rgba(231,236,243,0.09);
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--font-body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 24px;}
+
+  /* Eyebrow / labels */
+  .eyebrow{
+    font-family:var(--font-mono);
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--trust);
+  }
+
+  header.top{padding:48px 0 0;}
+  header.top .wrap{display:flex; justify-content:space-between; align-items:center;}
+  .brand{font-family:var(--font-mono); font-size:13px; color:var(--muted);}
+
+  /* HERO */
+  .hero{padding:64px 0 40px;}
+  .hero h1{
+    font-family:var(--font-display);
+    font-weight:600;
+    font-size:clamp(32px, 5vw, 52px);
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    margin:14px 0 20px;
+  }
+  .hero h1 span{color:var(--trust);}
+  .hero p.lede{
+    color:var(--muted);
+    font-size:18px;
+    max-width:640px;
+    margin-bottom:8px;
+  }
+  .hero .impact{
+    font-family:var(--font-mono);
+    color:var(--risk);
+    font-size:14px;
+    margin-top:18px;
+  }
+
+  /* SIGNATURE DIAGRAM */
+  .diagram{
+    margin:56px 0 8px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:14px;
+    padding:36px 28px 28px;
+    overflow-x:auto;
+  }
+  .diagram-caption{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--muted);
+    margin-top:16px;
+    text-align:center;
+  }
+  .boundary-row{
+    display:flex;
+    align-items:stretch;
+    gap:0;
+    min-width:680px;
+  }
+  .side{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .side-label{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .box{
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:9px;
+    padding:14px 16px;
+    font-size:13.5px;
+  }
+  .box.step{
+    border-left:2px solid var(--trust);
+    opacity:0;
+    animation:reveal 0.5s ease forwards;
+  }
+  .box.human{
+    border-left:2px solid var(--risk);
+  }
+  .box.customer{
+    border-style:dashed;
+  }
+  @keyframes reveal{ to{opacity:1; transform:translateY(0);} from{transform:translateY(6px);} }
+  .step:nth-child(1){animation-delay:0.05s;}
+  .steps .box.step:nth-child(1){animation-delay:.1s;}
+  .steps .box.step:nth-child(2){animation-delay:.35s;}
+  .steps .box.step:nth-child(3){animation-delay:.6s;}
+  .steps .box.step:nth-child(4){animation-delay:.85s;}
+  .steps .box.step:nth-child(5){animation-delay:1.1s;}
+
+  .boundary-line{
+    width:2px;
+    background:repeating-linear-gradient(to bottom, var(--risk) 0 6px, transparent 6px 12px);
+    position:relative;
+    margin:0 20px;
+    flex-shrink:0;
+  }
+  .boundary-line::after{
+    content:"TRUST BOUNDARY";
+    position:absolute;
+    top:-28px;
+    left:50%;
+    transform:translateX(-50%) rotate(0deg);
+    font-family:var(--font-mono);
+    font-size:10px;
+    letter-spacing:0.1em;
+    color:var(--risk);
+    white-space:nowrap;
+  }
+  .steps{display:flex; flex-direction:column; gap:8px;}
+
+  @media (prefers-reduced-motion: reduce){
+    .box.step{animation:none; opacity:1;}
+  }
+
+  /* SECTIONS */
+  section{padding:56px 0;}
+  section.divider{border-top:1px solid var(--border);}
+  h2{
+    font-family:var(--font-display);
+    font-size:26px;
+    font-weight:600;
+    margin-bottom:18px;
+  }
+  p{color:var(--text);}
+  p.muted{color:var(--muted);}
+  .lead-text{font-size:16px; color:var(--muted); max-width:680px;}
+
+  /* TABLE */
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
+    font-size:14px;
+  }
+  th{
+    text-align:left;
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    color:var(--muted);
+    padding:10px 14px;
+    border-bottom:1px solid var(--border);
+  }
+  td{
+    padding:14px;
+    border-bottom:1px solid var(--border);
+    color:var(--text);
+  }
+  tr td:first-child{color:var(--trust); font-family:var(--font-mono); font-size:13px;}
+
+  /* STEPS LIST */
+  .flow-list{margin-top:24px; display:flex; flex-direction:column; gap:0;}
+  .flow-item{
+    display:grid;
+    grid-template-columns:44px 1fr;
+    gap:18px;
+    padding:20px 0;
+    border-bottom:1px solid var(--border);
+  }
+  .flow-item:last-child{border-bottom:none;}
+  .flow-num{
+    font-family:var(--font-mono);
+    color:var(--trust);
+    font-size:20px;
+    font-weight:500;
+  }
+  .flow-item h3{
+    font-family:var(--font-display);
+    font-size:17px;
+    font-weight:600;
+    margin-bottom:6px;
+  }
+  .flow-item p{color:var(--muted); font-size:14.5px;}
+
+  /* STATS */
+  .stats{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));
+    gap:16px;
+    margin-top:24px;
+  }
+  .stat{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:22px 20px;
+  }
+  .stat .num{
+    font-family:var(--font-display);
+    font-size:32px;
+    font-weight:700;
+    color:var(--trust);
+  }
+  .stat .label{
+    color:var(--muted);
+    font-size:13px;
+    margin-top:4px;
+  }
+
+  /* CALLOUT */
+  .callout{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-left:3px solid var(--risk);
+    border-radius:10px;
+    padding:20px 24px;
+    margin-top:24px;
+  }
+  .callout p{color:var(--text); font-size:15px;}
+  .callout .eyebrow{color:var(--risk); display:block; margin-bottom:8px;}
+
+  /* STACK BADGES */
+  .badges{display:flex; flex-wrap:wrap; gap:10px; margin-top:20px;}
+  .badge{
+    font-family:var(--font-mono);
+    font-size:12.5px;
+    padding:7px 13px;
+    border:1px solid var(--border);
+    border-radius:999px;
+    color:var(--muted);
+    background:var(--surface);
+  }
+
+  footer{
+    border-top:1px solid var(--border);
+    padding:40px 0 60px;
+    color:var(--muted);
+    font-size:13px;
+  }
+  footer .wrap{display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;}
+  footer a{color:var(--trust); text-decoration:none;}
+  footer a:hover{text-decoration:underline;}
+
+  .note{
+    font-size:12.5px;
+    color:var(--muted);
+    font-style:italic;
+    margin-top:28px;
+  }
+
+  @media (max-width:640px){
+    .boundary-row{flex-direction:column; min-width:0;}
+    .boundary-line{width:100%; height:2px; margin:20px 0; background:repeating-linear-gradient(to right, var(--risk) 0 6px, transparent 6px 12px);}
+    .boundary-line::after{top:-20px; left:0; transform:none;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <span class="brand">ISHA NEMA</span>
+    <span class="brand">Lead AI/ML Engineer</span>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">Case study · Agentic AI</span>
+    <h1>Turning a week of manual<br>privacy review into <span>half a day</span>.</h1>
+    <p class="lede">An agentic LLM workflow that automates enterprise data-sharing privacy assessments — retrieval-grounded, fact-checked, and never signed off without a human in the loop.</p>
+    <p class="impact">~90% faster turnaround · across enterprise mobility, insurance & industrial customers</p>
+
+    <div class="diagram">
+      <div class="boundary-row">
+        <div class="side">
+          <span class="side-label">Customer side</span>
+          <div class="box customer">Architecture docs<br>Data format specs<br>Use case description</div>
+        </div>
+        <div class="boundary-line"></div>
+        <div class="side steps">
+          <span class="side-label">Internal pipeline (LangGraph agent)</span>
+          <div class="box step">1 · Context gathering — Confluence API</div>
+          <div class="box step">2 · Prior assessment search — embedding similarity</div>
+          <div class="box step">3 · Attacker-model run (if no close precedent)</div>
+          <div class="box step">4 · Draft generation (LLM) — threat model, risk, GDPR mapping</div>
+          <div class="box step">5 · Fact-check (separate LLM call) against source docs</div>
+          <div class="box human">Human review — Trust/Privacy team → signed-off assessment</div>
+        </div>
+      </div>
+      <div class="diagram-caption">The customer hands over documents once. Everything downstream runs entirely inside internal infrastructure.</div>
+    </div>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>The problem</h2>
+    <p class="lead-text">Every new enterprise data-sharing engagement required the same manual sequence: review the customer's data schema, cross-reference it against anonymization capabilities, evaluate privacy risk using attacker-model results, draft an assessment, and route it for compliance sign-off. Each pass took most of a week — and most of that time was re-deriving context that had already been established in a prior, similar assessment.</p>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>The trust boundary</h2>
+    <p class="lead-text">The design constraint that shaped everything else: the customer never gets access to internal systems. They hand over documents once — everything after that runs entirely inside internal infrastructure.</p>
+    <table>
+      <tr><th>What</th><th>Where it lives</th><th>How the agent accesses it</th></tr>
+      <tr><td>Customer's docs</td><td>Internal Confluence (customer-provided)</td><td>Confluence API</td></tr>
+      <tr><td>Prior assessments</td><td>Internal vector store</td><td>Embedding similarity search</td></tr>
+      <tr><td>Attacker model</td><td>Internal service</td><td>Internal API call</td></tr>
+      <tr><td>LLM</td><td>External API</td><td>LangChain wrapper</td></tr>
+      <tr><td>Human reviewer</td><td>Internal Trust/Privacy team</td><td>Manual approval step</td></tr>
+    </table>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>How it works</h2>
+    <div class="flow-list">
+      <div class="flow-item">
+        <span class="flow-num">01</span>
+        <div><h3>Context gathering</h3><p>The agent pulls the customer's architecture docs and data specs from an internal Confluence space — never from the customer's own systems.</p></div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-num">02</span>
+        <div><h3>Prior assessment search</h3><p>The current use case is embedded and matched against a vector store of past assessments. A high similarity score lets the agent reuse prior analysis instead of starting cold.</p></div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-num">03</span>
+        <div><h3>Attacker-model decision</h3><p>Without a close precedent, the pipeline triggers a full attacker-model run to quantify re-identification risk for this specific data configuration.</p></div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-num">04</span>
+        <div><h3>Draft generation</h3><p>An LLM call produces a structured draft: threat model, quantified risk, configuration recommendation, and regulatory (GDPR) mapping.</p></div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-num">05</span>
+        <div><h3>Fact-check pass</h3><p>A separate LLM call cross-checks every claim in the draft against the source documents and flags low-confidence sections rather than letting them pass silently.</p></div>
+      </div>
+      <div class="flow-item">
+        <span class="flow-num">06</span>
+        <div><h3>Human review</h3><p>The Trust/Privacy team accepts, edits, or requests a regeneration. Edits are fed back as examples to improve future drafts.</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>Results</h2>
+    <div class="stats">
+      <div class="stat"><div class="num">~90%</div><div class="label">reduction in assessment turnaround</div></div>
+      <div class="stat"><div class="num">1 wk → 4 hrs</div><div class="label">typical review time, before vs. after</div></div>
+      <div class="stat"><div class="num">4</div><div class="label">enterprise engagements covered</div></div>
+      <div class="stat"><div class="num">100%</div><div class="label">of outputs reviewed by a human before delivery</div></div>
+    </div>
+
+    <div class="callout">
+      <span class="eyebrow">Why the fact-check step matters</span>
+      <p>The riskiest failure mode for an LLM-in-the-loop compliance workflow isn't a bad draft — it's a confident, wrong one that a reviewer rubber-stamps. Splitting generation and verification into separate LLM calls, and routing every output through a human reviewer, keeps the system a draft assistant rather than an autonomous decision-maker.</p>
+    </div>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>Stack</h2>
+    <div class="badges">
+      <span class="badge">LangGraph</span>
+      <span class="badge">LangChain</span>
+      <span class="badge">Confluence API</span>
+      <span class="badge">Vector similarity search</span>
+      <span class="badge">LLM (GPT-family)</span>
+      <span class="badge">Human-in-the-loop review</span>
+    </div>
+    <p class="note">This is a sanitized architecture overview of a production system. Customer names, internal infrastructure details, and exact configuration values have been generalized or removed.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <span>Isha Nema — Lead AI/ML Engineer</span>
+    <span><a href="https://www.linkedin.com/in/isha-nema" target="_blank">LinkedIn</a> &nbsp;·&nbsp; <a href="https://github.com/ishanema1" target="_blank">GitHub</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

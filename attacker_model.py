@@ -48,7 +48,13 @@ from sklearn.metrics import accuracy_score
 try:
     from xgboost import XGBClassifier  # optional — used if available
     _HAS_XGBOOST = True
-except ImportError:
+except Exception:
+    # Deliberately broad: xgboost can fail at import time for reasons other
+    # than "not installed" — e.g. a version mismatch between an older
+    # xgboost and a newer setuptools breaks its optional dask-detection
+    # code with an AttributeError, not an ImportError. Since this backend
+    # is optional and we fall back to scikit-learn either way, any failure
+    # here should trigger the fallback rather than crash the whole module.
     _HAS_XGBOOST = False
 
 

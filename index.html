@@ -281,10 +281,100 @@
     margin-top:28px;
   }
 
+  /* WORKFLOW VS AGENT COMPARISON */
+  .compare{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:18px;
+    margin-top:28px;
+  }
+  .compare-card{
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:22px;
+  }
+  .compare-card.agent{ border-color:rgba(67,217,192,0.35); }
+  .compare-card .kicker{
+    font-family:var(--font-mono);
+    font-size:11px;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .compare-card.agent .kicker{ color:var(--trust); }
+  .compare-card h3{
+    font-family:var(--font-display);
+    font-size:18px;
+    margin-bottom:10px;
+  }
+  .compare-card .filename{
+    font-family:var(--font-mono);
+    font-size:12px;
+    color:var(--muted);
+    margin-bottom:14px;
+  }
+  .mini-flow{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-bottom:14px;
+  }
+  .mini-step{
+    font-family:var(--font-mono);
+    font-size:12px;
+    background:var(--surface-2);
+    border:1px solid var(--border);
+    border-radius:6px;
+    padding:8px 11px;
+    color:var(--text);
+  }
+  .mini-step.decider{ border-left:2px solid var(--trust); }
+  .compare-card p.desc{ font-size:13.5px; color:var(--muted); }
+
+  /* MCP badge row */
+  .mcp-row{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top:22px;
+    padding:16px 18px;
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:10px;
+    flex-wrap:wrap;
+  }
+  .mcp-row .pill{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--trust);
+    border:1px solid rgba(67,217,192,0.4);
+    border-radius:999px;
+    padding:4px 11px;
+  }
+  .mcp-row p{ font-size:13.5px; color:var(--muted); margin:0; }
+
+  /* TEST COVERAGE STAT STRIP */
+  .test-strip{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-top:8px;
+    font-family:var(--font-mono);
+    font-size:13px;
+    color:var(--muted);
+  }
+  .test-strip strong{ color:var(--trust); font-size:20px; }
+
+  .file-ref{ font-family:var(--font-mono); font-size:12.5px; color:var(--trust); }
+  code{ font-family:var(--font-mono); background:var(--surface-2); padding:1px 5px; border-radius:4px; font-size:0.92em; }
+
   @media (max-width:640px){
     .boundary-row{flex-direction:column; min-width:0;}
     .boundary-line{width:100%; height:2px; margin:20px 0; background:repeating-linear-gradient(to right, var(--risk) 0 6px, transparent 6px 12px);}
     .boundary-line::after{top:-20px; left:0; transform:none;}
+    .compare{grid-template-columns:1fr;}
   }
 </style>
 </head>
@@ -301,8 +391,9 @@
   <div class="wrap">
     <span class="eyebrow">Case study · Agentic AI</span>
     <h1>Turning a week of manual<br>privacy review into <span>half a day</span>.</h1>
-    <p class="lede">An agentic LLM workflow that automates enterprise data-sharing privacy assessments — retrieval-grounded, fact-checked, and never signed off without a human in the loop.</p>
+    <p class="lede">A system that automates enterprise data-sharing privacy assessments — retrieval-grounded, built both as a fixed workflow and as a real tool-calling agent, and never lets the LLM decide the one number that actually matters.</p>
     <p class="impact">~90% faster turnaround · across enterprise mobility, insurance & industrial customers</p>
+    <div class="test-strip"><strong>61</strong> tests passing across 8 modules — every claim on this page traces to code that's actually run</div>
 
     <div class="diagram">
       <div class="boundary-row">
@@ -312,13 +403,11 @@
         </div>
         <div class="boundary-line"></div>
         <div class="side steps">
-          <span class="side-label">Internal pipeline (LangGraph agent)</span>
+          <span class="side-label">Internal system</span>
           <div class="box step">1 · Context gathering — Confluence API</div>
           <div class="box step">2 · Prior assessment search — embedding similarity</div>
           <div class="box step">3 · Attacker-model run (if no close precedent)</div>
           <div class="box step">4 · Draft generation (LLM) — threat model, risk, GDPR mapping</div>
-          <div class="box step">5 · Fact-check (separate LLM call) against source docs</div>
-          <div class="box human">Human review — Trust/Privacy team → signed-off assessment</div>
         </div>
       </div>
       <div class="diagram-caption">The customer hands over documents once. Everything downstream runs entirely inside internal infrastructure.</div>
@@ -342,7 +431,7 @@
       <tr><td>Customer's docs</td><td>Internal Confluence (customer-provided)</td><td>Confluence API</td></tr>
       <tr><td>Prior assessments</td><td>Internal vector store</td><td>Embedding similarity search</td></tr>
       <tr><td>Attacker model</td><td>Internal service</td><td>Internal API call</td></tr>
-      <tr><td>LLM</td><td>External API</td><td>LangChain wrapper</td></tr>
+      <tr><td>LLM</td><td>External API</td><td>Direct API call (tool-use)</td></tr>
       <tr><td>Human reviewer</td><td>Internal Trust/Privacy team</td><td>Manual approval step</td></tr>
     </table>
   </div>
@@ -354,28 +443,58 @@
     <div class="flow-list">
       <div class="flow-item">
         <span class="flow-num">01</span>
-        <div><h3>Context gathering</h3><p>The agent pulls the customer's architecture docs and data specs from an internal Confluence space — never from the customer's own systems.</p></div>
+        <div><h3>Context gathering</h3><p>Pulls the customer's architecture docs and data specs from an internal Confluence space — never from the customer's own systems. <span class="file-ref">(confluence_client.py)</span></p></div>
       </div>
       <div class="flow-item">
         <span class="flow-num">02</span>
-        <div><h3>Prior assessment search</h3><p>The current use case is embedded and matched against a vector store of past assessments. A high similarity score lets the agent reuse prior analysis instead of starting cold.</p></div>
+        <div><h3>Prior assessment search</h3><p>The current use case is embedded and matched against a vector store of past assessments. A high similarity score lets the system reuse prior analysis instead of starting cold. <span class="file-ref">(vector_store.py)</span></p></div>
       </div>
       <div class="flow-item">
         <span class="flow-num">03</span>
-        <div><h3>Attacker-model decision</h3><p>Without a close precedent, the pipeline triggers a full attacker-model run to quantify re-identification risk for this specific data configuration.</p></div>
+        <div><h3>Attacker-model decision</h3><p>Without a close precedent, a synthetic-data privacy-risk evaluation runs to quantify re-identification risk for this configuration. <span class="file-ref">(attacker_model.py)</span></p></div>
       </div>
       <div class="flow-item">
         <span class="flow-num">04</span>
-        <div><h3>Draft generation</h3><p>An LLM call produces a structured draft: threat model, quantified risk, configuration recommendation, and regulatory (GDPR) mapping.</p></div>
+        <div><h3>Draft generation</h3><p>An LLM call produces a structured draft: threat model, quantified risk, configuration recommendation, and regulatory (GDPR) mapping — with risk level always computed deterministically from the score, never by the LLM. <span class="file-ref">(draft_generator.py)</span></p></div>
       </div>
-      <div class="flow-item">
-        <span class="flow-num">05</span>
-        <div><h3>Fact-check pass</h3><p>A separate LLM call cross-checks every claim in the draft against the source documents and flags low-confidence sections rather than letting them pass silently.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="divider">
+  <div class="wrap">
+    <h2>Two ways to run the same four steps</h2>
+    <p class="lead-text">Worth being precise about a distinction that matters: a workflow and an agent are not the same thing, even when they call the same tools. This repo implements both, on purpose, to make the difference concrete rather than just claiming it.</p>
+    <div class="compare">
+      <div class="compare-card">
+        <span class="kicker">Workflow</span>
+        <h3>Code decides</h3>
+        <div class="filename">pipeline.py</div>
+        <div class="mini-flow">
+          <div class="mini-step">confluence_client → docs</div>
+          <div class="mini-step">vector_store → reuse or not</div>
+          <div class="mini-step">attacker_model → risk score</div>
+          <div class="mini-step">draft_generator → draft</div>
+        </div>
+        <p class="desc">Fixed call order, expressed as an <code>if/else</code>. The LLM generates text at one step; it never chooses what happens next.</p>
       </div>
-      <div class="flow-item">
-        <span class="flow-num">06</span>
-        <div><h3>Human review</h3><p>The Trust/Privacy team accepts, edits, or requests a regeneration. Edits are fed back as examples to improve future drafts.</p></div>
+      <div class="compare-card agent">
+        <span class="kicker">Agent</span>
+        <h3>The model decides</h3>
+        <div class="filename">agent.py</div>
+        <div class="mini-flow">
+          <div class="mini-step decider">LLM sees 4 tool schemas</div>
+          <div class="mini-step decider">LLM picks the next tool call</div>
+          <div class="mini-step decider">… repeats until confident</div>
+          <div class="mini-step decider">LLM calls submit_privacy_assessment</div>
+        </div>
+        <p class="desc">Real tool-use loop, implemented directly against the wire API. The model chooses which tool to call and when — tested by call-counting whether it actually skips the expensive attacker-model run when a prior match exists.</p>
       </div>
+    </div>
+
+    <div class="mcp-row">
+      <span class="pill">MCP server</span>
+      <p>The same three read tools are also exposed over the Model Context Protocol (JSON-RPC over stdio), so any MCP-compatible client — Claude Desktop, another agent, a different application entirely — can call them without importing this repo's Python.</p>
     </div>
   </div>
 </section>
@@ -391,8 +510,8 @@
     </div>
 
     <div class="callout">
-      <span class="eyebrow">Why the fact-check step matters</span>
-      <p>The riskiest failure mode for an LLM-in-the-loop compliance workflow isn't a bad draft — it's a confident, wrong one that a reviewer rubber-stamps. Splitting generation and verification into separate LLM calls, and routing every output through a human reviewer, keeps the system a draft assistant rather than an autonomous decision-maker.</p>
+      <span class="eyebrow">The one thing the LLM never decides</span>
+      <p>The riskiest failure mode for an LLM-in-the-loop compliance workflow isn't a bad draft — it's a confident, wrong risk classification that a reviewer rubber-stamps. Risk level (low/medium/high) is always computed deterministically from the attacker model's numeric score, never parsed from the LLM's output — enforced at the code level in the workflow, and at the tool-schema level in the agent (the <code>submit_privacy_assessment</code> tool doesn't even expose a risk_level field for the model to fill in). Both are tested explicitly, including a test where a fake LLM tries to smuggle in its own risk label and gets overridden anyway.</p>
     </div>
   </div>
 </section>
@@ -401,14 +520,15 @@
   <div class="wrap">
     <h2>Stack</h2>
     <div class="badges">
-      <span class="badge">LangGraph</span>
-      <span class="badge">LangChain</span>
+      <span class="badge">Python</span>
+      <span class="badge">Anthropic tool-use API (direct)</span>
+      <span class="badge">Model Context Protocol</span>
       <span class="badge">Confluence API</span>
+      <span class="badge">scikit-learn / XGBoost</span>
       <span class="badge">Vector similarity search</span>
-      <span class="badge">LLM (GPT-family)</span>
-      <span class="badge">Human-in-the-loop review</span>
+      <span class="badge">pytest — 61 tests</span>
     </div>
-    <p class="note">This is a sanitized architecture overview of a production system. Customer names, internal infrastructure details, and exact configuration values have been generalized or removed.</p>
+    <p class="note">Implemented directly against the Anthropic tool-use and MCP wire protocols rather than through LangGraph/LangChain — a from-scratch implementation is a stronger demonstration of what those frameworks are doing underneath. This is a sanitized architecture overview; customer names, internal infrastructure details, and exact configuration values have been generalized or removed.</p>
   </div>
 </section>
 

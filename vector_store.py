@@ -118,6 +118,7 @@ class Assessment:
     customer_ref: str        # anonymized reference, e.g. "cust_014" — never a real customer name
     use_case_summary: str    # short natural-language description of the data-sharing use case
     risk_level: str          # "low" | "medium" | "high"
+    risk_score: Optional[float] = None  # numeric attacker-model score, if this was a scored assessment
     embedding: Optional[np.ndarray] = field(default=None, repr=False)
 
     def to_metadata(self) -> dict:
@@ -126,6 +127,7 @@ class Assessment:
             "customer_ref": self.customer_ref,
             "use_case_summary": self.use_case_summary,
             "risk_level": self.risk_level,
+            "risk_score": self.risk_score,
         }
 
 
@@ -143,7 +145,9 @@ class PriorAssessmentStore:
         self._assessments: list[Assessment] = []
         self._matrix: Optional[np.ndarray] = None  # (n, dim) matrix of stacked embeddings
 
-    def add_assessment(self, customer_ref: str, use_case_summary: str, risk_level: str) -> Assessment:
+    def add_assessment(
+        self, customer_ref: str, use_case_summary: str, risk_level: str, risk_score: Optional[float] = None
+    ) -> Assessment:
         """Embed and index a completed assessment for future retrieval."""
         embedding = self._embedder.embed(use_case_summary)
         assessment = Assessment(
@@ -151,6 +155,7 @@ class PriorAssessmentStore:
             customer_ref=customer_ref,
             use_case_summary=use_case_summary,
             risk_level=risk_level,
+            risk_score=risk_score,
             embedding=embedding,
         )
         self._assessments.append(assessment)

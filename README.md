@@ -165,6 +165,39 @@ python attacker_model.py                    # prints the risk curve above
 python -m pytest test_attacker_model.py -v  # 10 tests, incl. "stronger anonymization -> lower risk"
 ```
 
+## Code sample: draft generation (LLM)
+
+[`draft_generator.py`](./draft_generator.py) implements step 4 — turning gathered context (customer docs, a similar prior assessment if one was found, and the attacker model's risk score) into a structured draft: threat model, configuration recommendation, and a GDPR mapping.
+
+**The one design decision worth reading closely:** the risk **level** (low/medium/high) is computed deterministically in code from the attacker model's numeric score (`classify_risk_level`) — it is never parsed from the LLM's response, even if the LLM's output happens to include one. A compliance document's risk tier shouldn't depend on generative interpretation of a number that was already computed precisely upstream. The LLM's role is limited to the narrative sections; a test (`test_risk_level_is_not_taken_from_llm_even_if_it_tries_to_supply_one`) explicitly locks this in.
+
+Other choices:
+
+- **Structured JSON output, strictly validated.** The system prompt requests exactly three keys; a missing key or invalid JSON raises `DraftGenerationError` rather than silently producing a malformed draft.
+- **The prompt explicitly tells the model not to invent facts** not present in the provided context — the same "don't fill gaps confidently" instinct that motivates the separate fact-check step later in the pipeline.
+- **Zero-dependency mock LLM client** for demos and tests, following the same fallback pattern as the other modules — no API key required to run the demo or test suite.
+
+```bash
+python draft_generator.py                    # runs with the mock client, no API key needed
+python -m pytest test_draft_generator.py -v  # 12 tests, fully offline
+```
+
+## Integration test: the full pipeline, wired together
+
+[`pipeline.py`](./pipeline.py) is the orchestrator that composes all four modules above into the actual call sequence from the architecture diagram — context gathering, then either reusing a prior assessment or running a fresh attacker-model evaluation, then draft generation.
+
+[`test_pipeline_integration.py`](./test_pipeline_integration.py) exercises this end-to-end, fully offline (mocked Confluence, hashing embedder, a small synthetic attacker-model population, mock LLM). It specifically proves the two behaviors that matter most about this design:
+
+- **When no similar prior assessment exists**, the attacker model actually runs, and the resulting draft's risk level is consistent with the score it produced.
+- **When a sufficiently similar prior assessment exists**, the attacker model is *skipped entirely* — verified by call-counting, not just by checking the final output — and the cached risk score flows through to the draft instead.
+
+This is the test that would catch the most expensive class of bug in this pipeline: quietly re-running (or quietly skipping) an attacker-model evaluation when the routing logic should have done the opposite.
+
+```bash
+python -m pytest test_pipeline_integration.py -v   # 3 tests, fully offline
+python -m pytest -v                                 # run everything — 39 tests across the repo
+```
+
 
 
 `LangGraph` · `LangChain` · Confluence API · Vector similarity search · LLM (GPT-family) · Human-in-the-loop review
